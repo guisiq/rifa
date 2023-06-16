@@ -9,22 +9,25 @@ import java.util.List;
 public class SocketServerThread extends Thread {
     private Socket clientSocket;
     private List<Ticket> availableTickets;
-
+    DataInputStream in;
+    DataOutputStream out;
     public SocketServerThread(Socket clientSocket, List<Ticket> Tickets) {
         this.clientSocket = clientSocket;
         this.availableTickets = Tickets;
+        try {
+            in = new DataInputStream(clientSocket.getInputStream());
+            out = new DataOutputStream(clientSocket.getOutputStream());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void run() {
         try {
-            // Criar streams de entrada e saída para comunicação com o cliente
-            // ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-            // ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
 
             
-            DataInputStream in = new DataInputStream(clientSocket.getInputStream());
-            DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
 
             // Aguardar comandos do cliente
             while (true) {
@@ -44,6 +47,7 @@ public class SocketServerThread extends Thread {
             in.close();
             out.close();
             clientSocket.close();
+            this.interrupt();
         } catch (IOException e) {
             e.printStackTrace();
         }
