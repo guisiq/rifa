@@ -1,3 +1,5 @@
+import java.util.List;
+
 public class Ticket {
     private int number;
     private String nomeComprador;
@@ -21,5 +23,15 @@ public class Ticket {
 
     public int getNumber() {
         return number;
+    }
+    
+    public static String getTicketNumbers(List<Ticket> tickets) {
+        StringBuilder sb = new StringBuilder();
+
+        for (Ticket ticket : tickets) {
+            sb.append(ticket.getNumber()).append(" ");
+        }
+
+        return sb.toString().trim();
     }
 }
