@@ -5,6 +5,9 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 public class RaffleServer implements RaffleService {
     private List<Ticket> tickets;
@@ -32,9 +35,9 @@ public class RaffleServer implements RaffleService {
         tickets.add(new Ticket(ticketNumber, participantName));
         ticketCount++;
 
-        if (ticketCount == 3) {
+        if (ticketCount == 10) {
             var winnerIndex = drawWinner();
-            return "Bilhete comprado com sucesso. Sorteio realizado. Vencedor: Participante no índice " + winnerIndex;
+            return "Bilhete comprado com sucesso. Sorteio realizado. Vencedor: Participante " + winnerIndex;
         }
 
         return "Bilhete comprado com sucesso.";
@@ -60,8 +63,29 @@ public class RaffleServer implements RaffleService {
             Registry registry = LocateRegistry.createRegistry(1099);
             registry.rebind("RaffleService", stub);
             System.out.println("Servidor de rifa iniciado.");
+            System.out.println("iniciando socket...");
+            server.start();
+
         } catch (Exception e) {
             System.err.println("Erro no servidor: " + e.toString());
+        }
+    }
+
+    public void start() {
+        try {
+            ServerSocket serverSocket = new ServerSocket(8080);
+
+            while (true) {
+                System.out.println("Aguardando conexão do cliente...");
+                Socket clientSocket = serverSocket.accept();
+                
+                // Crie e inicie uma nova thread para lidar com a conexão do cliente
+                SocketServerThread serverThread = new SocketServerThread(clientSocket, tickets);
+                System.out.println("conectando com outro cliente ...");
+                serverThread.start();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
