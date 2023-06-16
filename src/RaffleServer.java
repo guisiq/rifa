@@ -2,15 +2,14 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class RaffleServer implements RaffleService {
     private List<Ticket> tickets;
+    private static Vector<SocketServerThread> serverSocketThreads;
     private int ticketCount;
     private Random random;
     private static final int LIMIT_RIFA = 10;
@@ -18,8 +17,22 @@ public class RaffleServer implements RaffleService {
         tickets = new ArrayList<>();
         ticketCount = 0;
         random = new Random();
+        serverSocketThreads = new Vector<>();
     }
-
+    private static void AviseTodos(String msg) {
+        for (SocketServerThread thread : serverSocketThreads) {
+            try {
+                if(thread.getState() != Thread.State.TERMINATED){
+                    thread.out.writeUTF(msg);
+                }else{
+                    serverSocketThreads.remove(thread);
+                }
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
     @Override
     public synchronized String buyTicket(String participantName, int ticketNumber) throws RemoteException {
         if (ticketCount >= LIMIT_RIFA ) {
@@ -49,10 +62,11 @@ public class RaffleServer implements RaffleService {
         }
 
         System.out.println("Sorteando o vencedor...");
+        AviseTodos("Sorteando o vencedor...");
         int winnerIndex = random.nextInt(tickets.size());
         var ganhador = tickets.get(winnerIndex);
         System.out.println("O vencedor é o participante " + ganhador.getNomeComprador() + " com o bilhete " + ganhador.getNumber() );
-
+        AviseTodos("O vencedor é o participante " + ganhador.getNomeComprador() + " com o bilhete " + ganhador.getNumber());
         return ganhador.getNomeComprador() + " com o bilhete " + ganhador.getNumber();
     }
 
@@ -83,6 +97,7 @@ public class RaffleServer implements RaffleService {
                 SocketServerThread serverThread = new SocketServerThread(clientSocket, tickets);
                 System.out.println("conectando com outro cliente ...");
                 serverThread.start();
+                serverSocketThreads.add(serverThread);
             }
         } catch (IOException e) {
             e.printStackTrace();
