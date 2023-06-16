@@ -13,7 +13,7 @@ public class RaffleServer implements RaffleService {
     private List<Ticket> tickets;
     private int ticketCount;
     private Random random;
-
+    private static final int LIMIT_RIFA = 10;
     public RaffleServer() {
         tickets = new ArrayList<>();
         ticketCount = 0;
@@ -22,7 +22,7 @@ public class RaffleServer implements RaffleService {
 
     @Override
     public synchronized String buyTicket(String participantName, int ticketNumber) throws RemoteException {
-        if (ticketCount >= 50) {
+        if (ticketCount >= LIMIT_RIFA ) {
             return "Não é possível comprar bilhetes após o sorteio.";
         }
 
@@ -35,7 +35,7 @@ public class RaffleServer implements RaffleService {
         tickets.add(new Ticket(ticketNumber, participantName));
         ticketCount++;
 
-        if (ticketCount == 10) {
+        if (ticketCount == LIMIT_RIFA ) {
             var winnerIndex = drawWinner();
             return "Bilhete comprado com sucesso. Sorteio realizado. Vencedor: Participante " + winnerIndex;
         }
